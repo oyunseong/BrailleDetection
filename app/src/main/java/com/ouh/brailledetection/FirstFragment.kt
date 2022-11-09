@@ -16,14 +16,22 @@ import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.viewModels
-import androidx.navigation.fragment.findNavController
 import com.ouh.brailledetection.databinding.FragmentFirstBinding
+import com.ouh.brailledetection.model.Braille
+import com.ouh.brailledetection.server.BrailleAPI
+import com.ouh.brailledetection.server.RetrofitClient
+import retrofit2.Call
+import retrofit2.Response
+import retrofit2.Retrofit
 
 /**
  * A simple [Fragment] subclass as the default destination in the navigation.
  */
 class FirstFragment : Fragment() {
     val cameraViewModel by viewModels<CameraViewModel>()
+    lateinit var retrofit: Retrofit
+    lateinit var brailleAPI: BrailleAPI
+
     private val CAMERA_PERMISSION = arrayOf(Manifest.permission.CAMERA)
     private val STORAGE_PERMISSION = arrayOf(
         Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -52,17 +60,23 @@ class FirstFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        retrofit = RetrofitClient.getInstance()
+        brailleAPI = retrofit.create(BrailleAPI::class.java)
 
 //        binding.buttonFirst.setOnClickListener {
 //            findNavController().navigate(R.id.action_FirstFragment_to_SecondFragment)
 //        }
 
-        cameraViewModel.braille.observe(viewLifecycleOwner) {
+        cameraViewModel.brailleImage.observe(viewLifecycleOwner) {
             binding.textviewFirst.text = it.toString()
         }
 
         binding.cameraButton.setOnClickListener {
             openCamera()
+        }
+
+        cameraViewModel.brailleData.observe(viewLifecycleOwner) {
+            binding.textviewFirst.text = it.toString()
         }
     }
 
@@ -94,6 +108,7 @@ class FirstFragment : Fragment() {
                     try {
                         Log.d("++Camera", "setImage success")
                         cameraViewModel.setImage(bitmap)
+                        callServerData()
                     } catch (e: Exception) {
                         Toast.makeText(requireContext(), "이미지를 저장할 수 없습니다.", Toast.LENGTH_SHORT)
                             .show()
@@ -105,6 +120,27 @@ class FirstFragment : Fragment() {
                 }
             }
         }
+    }
+
+    private fun callServerData() {
+        Runnable {
+            brailleAPI.getBrailleData().enqueue(object : retrofit2.Callback<Braille> {
+                override fun onResponse(call: Call<Braille>, response: Response<Braille>) {
+                    val brailleData = response.body()
+                    if (brailleData == null) {
+                        Toast.makeText(requireContext(), "데이터 is null", Toast.LENGTH_SHORT).show()
+                    }
+                    cameraViewModel.setData(brailleData!!)
+                }
+
+                override fun onFailure(call: Call<Braille>, t: Throwable) {
+                    Toast.makeText(requireContext(), "Retrofit2 Error!", Toast.LENGTH_SHORT).show()
+                    Log.d("++initServer", "onFailure message : " + t.message.toString())
+                }
+
+            })
+        }
+
     }
 
     override fun onDestroyView() {
