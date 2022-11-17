@@ -18,6 +18,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import com.bumptech.glide.Glide
 import com.ouh.brailledetection.databinding.FragmentFirstBinding
 import com.ouh.brailledetection.domain.Braille
 import com.ouh.brailledetection.server.BrailleAPI
@@ -89,6 +90,16 @@ class FirstFragment : Fragment() {
         cameraViewModel.brailleData.observe(viewLifecycleOwner) {
             binding.inferText.text = it.toString()
         }
+    }
+
+    // 서버에 있는 이미지 가져오기
+    private fun getImageFromServer(){
+        cameraViewModel.brailleImage.observe(viewLifecycleOwner) {
+            Glide.with(this)
+                .load("https://cdn.pixabay.com/photo/2021/08/03/07/03/orange-6518675_960_720.jpg")
+                .into(binding.image)
+        }
+
     }
 
     private fun setTTs() {
