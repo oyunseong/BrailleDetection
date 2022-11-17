@@ -23,7 +23,7 @@ class CameraViewModel : ViewModel() {
     val brailleData: LiveData<String> get() = _brailleData
 
     init {
-        _brailleData.value = "ABCDE FF"
+        _brailleData.value = "추론 결과 출력"
     }
 
     fun setImage(bitmap: Bitmap) {
