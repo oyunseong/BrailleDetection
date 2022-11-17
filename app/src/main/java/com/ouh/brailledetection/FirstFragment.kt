@@ -93,7 +93,7 @@ class FirstFragment : Fragment() {
     }
 
     // 서버에 있는 이미지 가져오기
-    private fun getImageFromServer(){
+    private fun getImageFromServer() {
         cameraViewModel.brailleImage.observe(viewLifecycleOwner) {
             Glide.with(this)
                 .load("https://cdn.pixabay.com/photo/2021/08/03/07/03/orange-6518675_960_720.jpg")
@@ -111,7 +111,7 @@ class FirstFragment : Fragment() {
         binding.inferText.setOnClickListener {
             tts?.setPitch(1.0f)
             tts?.setSpeechRate(1.0f)
-            tts?.speak(cameraViewModel.brailleData.value, TextToSpeech.QUEUE_FLUSH, null)
+            tts?.speak(cameraViewModel.bos.value.toString(), TextToSpeech.QUEUE_FLUSH, null)
         }
     }
 
