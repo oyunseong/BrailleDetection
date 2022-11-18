@@ -5,10 +5,9 @@ import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.http.*
 
-interface BrailleDao {
-    @GET("uploader")
+interface BrailleAPI {
+    @GET("Desktop/imprintList.json")
     fun requestData(): Call<String>
-
 
     @Multipart
     @POST("uploader")
