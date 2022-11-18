@@ -18,6 +18,7 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.ResponseBody
 import okio.BufferedSink
 import retrofit2.*
 
@@ -27,11 +28,9 @@ class CameraViewModel(
     private val _brailleImage = MutableLiveData<Bitmap>()
     val brailleImage: LiveData<Bitmap> get() = _brailleImage
 
-    private val _bos = MutableLiveData<ByteArray>()
-    val bos: LiveData<ByteArray> get() = _bos
-
     private val _brailleData = MutableLiveData<String>()
     val brailleData: LiveData<String> get() = _brailleData
+
     var retrofit: Retrofit = RetrofitClient.getInstance()
     var brailleAPI: BrailleAPI = retrofit.create(BrailleAPI::class.java)
 
@@ -47,18 +46,26 @@ class CameraViewModel(
         _brailleData.value = value
     }
 
-    fun setBos(data: ByteArray) {
-        _bos.value = data
-    }
-
     fun sendAddRequest() {
         viewModelScope.launch {
             val bitmapRequestBody: RequestBody =
                 BitmapRequestBody(brailleImage.value ?: return@launch)
             val bitmapMultipartBody: MultipartBody.Part =
                 MultipartBody.Part.createFormData("image", "a1", bitmapRequestBody)
-            val response = brailleAPI.postImage(bitmapMultipartBody).awaitResponse()
-            Log.d("++response", "$response")
+            brailleAPI.postImage(bitmapMultipartBody)
+                .enqueue(object : retrofit2.Callback<ResponseBody> {
+                    override fun onResponse(
+                        call: Call<ResponseBody>,
+                        response: Response<ResponseBody>
+                    ) {
+                        Log.d("sendAddRequest", "$response")
+                    }
+
+                    override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                        Log.d("++onResponse", "알 수 없는 오류 $t")
+                    }
+
+                })
         }
     }
 
