@@ -52,20 +52,25 @@ class CameraViewModel(
                 BitmapRequestBody(brailleImage.value ?: return@launch)
             val bitmapMultipartBody: MultipartBody.Part =
                 MultipartBody.Part.createFormData("image", "a1", bitmapRequestBody)
-            brailleAPI.postImage(bitmapMultipartBody)
-                .enqueue(object : retrofit2.Callback<ResponseBody> {
-                    override fun onResponse(
-                        call: Call<ResponseBody>,
-                        response: Response<ResponseBody>
-                    ) {
-                        Log.d("sendAddRequest", "$response")
-                    }
+            try {
+                brailleAPI.postImage(bitmapMultipartBody)
+                    .enqueue(object : retrofit2.Callback<ResponseBody> {
+                        override fun onResponse(
+                            call: Call<ResponseBody>,
+                            response: Response<ResponseBody>
+                        ) {
+                            Log.d("sendAddRequest", "$response")
+                        }
 
-                    override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                        Log.d("++onResponse", "알 수 없는 오류 $t")
-                    }
+                        override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                            Log.d("++onResponse", "알 수 없는 오류 $t")
+                        }
+                    })
+            } catch (e: Exception) {
+                Toast.makeText(MyApplication.instance, "서버에 연결할 수 없습니다.", Toast.LENGTH_SHORT).show()
+                e.printStackTrace()
+            }
 
-                })
         }
     }
 
@@ -80,7 +85,6 @@ class CameraViewModel(
                     } else {
                         Log.d("++onResponse", "알 수 없는 오류 $response")
                     }
-
                 }
 
                 override fun onFailure(call: Call<String>, t: Throwable) {
