@@ -21,6 +21,7 @@ object RetrofitClient {
         return instance!!
     }
 
+
     fun createOkHttpClient(): OkHttpClient {
         val builder = OkHttpClient.Builder()
         val interceptor = HttpLoggingInterceptor()

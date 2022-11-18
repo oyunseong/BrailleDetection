@@ -5,15 +5,15 @@ import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.http.*
 
-interface BrailleAPI {
+interface BrailleDao {
     @GET("uploader")
     fun requestData(): Call<String>
 
 
     @Multipart
     @POST("uploader")
-    fun postImage(
+    suspend fun postImage(
 //        @Body text: String
-        @Part("image") image: MultipartBody.Part
+        @Part image: MultipartBody.Part
     ): Call<ResponseBody>
 }
