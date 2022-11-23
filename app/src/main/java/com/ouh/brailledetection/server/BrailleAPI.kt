@@ -1,5 +1,6 @@
 package com.ouh.brailledetection.server
 
+import com.ouh.brailledetection.model.BrailleResponse
 import okhttp3.MultipartBody
 import okhttp3.ResponseBody
 import retrofit2.Call
@@ -11,8 +12,7 @@ interface BrailleAPI {
 
     @Multipart
     @POST("uploader")
-    suspend fun postImage(
-//        @Body text: String
+    fun postImage(
         @Part image: MultipartBody.Part
-    ): Call<ResponseBody>
+    ): Call<BrailleResponse>
 }

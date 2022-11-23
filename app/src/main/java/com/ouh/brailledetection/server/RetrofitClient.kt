@@ -14,7 +14,7 @@ object RetrofitClient {
     fun getInstance(): Retrofit {
         if (instance == null) {
             instance = Retrofit.Builder()
-                .baseUrl("https://oyunseong.github.io/")
+                .baseUrl("https://867d-34-173-216-156.ngrok.io/")
                 .client(createOkHttpClient())
                 .addConverterFactory(ScalarsConverterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create(gson))
