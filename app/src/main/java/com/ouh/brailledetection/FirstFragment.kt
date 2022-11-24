@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -16,6 +17,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.createBitmap
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.bumptech.glide.Glide
@@ -79,14 +81,6 @@ class FirstFragment : Fragment() {
         }
     }
 
-    // 서버에 있는 이미지 가져오기
-    private fun getImageFromServer() {
-        cameraViewModel.brailleImage.observe(viewLifecycleOwner) {
-            Glide.with(this)
-                .load("https://cdn.pixabay.com/photo/2021/08/03/07/03/orange-6518675_960_720.jpg")
-                .into(binding.image)
-        }
-    }
 
     private fun setTTs() {
         tts = TextToSpeech(requireContext(), object : TextToSpeech.OnInitListener {
@@ -129,6 +123,7 @@ class FirstFragment : Fragment() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+//        https://raon-studio.tistory.com/6
         if (resultCode == Activity.RESULT_OK) {
             val currentImageURL: Uri?
             when (requestCode) {
@@ -137,10 +132,20 @@ class FirstFragment : Fragment() {
                     val ins: InputStream? = currentImageURL?.let {
                         MyApplication.applicationContext().contentResolver.openInputStream(it)
                     }
-                    Log.d("++image ins", "$ins")
-                    binding.inferText.text = ins.toString()
+                    val uri: InputStream? = currentImageURL?.let {
+                        MyApplication.applicationContext().contentResolver.openInputStream(it)
+                    }
 
-                    val bitmap: Bitmap = data?.extras?.get("data") as Bitmap
+                    val bitmap: Bitmap? = BitmapFactory.decodeStream(
+                        requireContext().contentResolver.openInputStream(currentImageURL!!),
+                        null,
+                        null
+                    )
+                    Log.d("++image ins", "$uri")
+                    binding.inferText.text = uri.toString()
+
+//                    var bitmap: Bitmap = data?.extras?.get("data") as Bitmap
+
 
                     binding.image.setImageURI(currentImageURL)
                     cameraViewModel.setImage(bitmap = bitmap)
@@ -167,4 +172,5 @@ class FirstFragment : Fragment() {
         super.onDestroyView()
         _binding = null
     }
+
 }

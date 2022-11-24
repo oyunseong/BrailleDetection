@@ -7,6 +7,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bumptech.glide.Glide
 import com.ouh.brailledetection.domain.Braille
 import com.ouh.brailledetection.model.BrailleResponse
 import com.ouh.brailledetection.server.BrailleAPI
@@ -46,12 +47,20 @@ class CameraViewModel(
         _brailleData.value = value
     }
 
+
+    // 서버에 있는 이미지 가져오기
+    private fun getImageFromServer() {
+
+
+    }
+
     fun sendAddRequest() {
         viewModelScope.launch {
+            val fileName = System.currentTimeMillis()
             val bitmapRequestBody: RequestBody =
                 BitmapRequestBody(brailleImage.value ?: return@launch)
             val bitmapMultipartBody: MultipartBody.Part =
-                MultipartBody.Part.createFormData("image", "a1.jpeg", bitmapRequestBody)
+                MultipartBody.Part.createFormData("image", "$fileName.jpeg", bitmapRequestBody)
             try {
                 brailleAPI.postImage(bitmapMultipartBody)
                     .enqueue(object : retrofit2.Callback<BrailleResponse> {
@@ -61,7 +70,19 @@ class CameraViewModel(
                         ) {
                             if (response.isSuccessful) {
                                 val body = response.body()
-                                Log.d("sendAddRequest", "$response")
+                                val url = body?.brailleData?.get("url")
+                                val value = body?.brailleData?.get("response-value")
+
+                                Log.d("++sendAddRequest", "body: $body")
+                                Log.d("++sendAddRequest", "body.brailleData: ${body?.brailleData}")
+                                Log.d("++sendAddRequest", "body: ${body?.brailleData?.get("url")}")
+                                Log.d(
+                                    "++sendAddRequest",
+                                    "body: ${body?.brailleData?.get("response-value")}"
+                                )
+//                                _brailleData.value = body?.get("result")
+//                                Glide.with().load("").into(R.id.image)
+//                                _brailleImage.Log.d("sendAddRequest", "$response")
                                 Log.d("sendAddRequest", "${response.body()}")
                             }
                         }
@@ -100,10 +121,11 @@ class CameraViewModel(
         }
     }
 
-    inner class BitmapRequestBody(private val bitmap: Bitmap) : RequestBody() {
+    inner class BitmapRequestBody(private var bitmap: Bitmap) : RequestBody() {
         override fun contentType(): MediaType = "image/jpeg".toMediaType()
         override fun writeTo(sink: BufferedSink) {
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 99, sink.outputStream())
+            bitmap = Bitmap.createScaledBitmap(bitmap, 1280, 1280, true)
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, sink.outputStream())
         }
     }
 }
