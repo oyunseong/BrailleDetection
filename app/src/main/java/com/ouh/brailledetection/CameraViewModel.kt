@@ -1,27 +1,26 @@
 package com.ouh.brailledetection
 
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.bumptech.glide.Glide
-import com.ouh.brailledetection.domain.Braille
 import com.ouh.brailledetection.model.BrailleResponse
 import com.ouh.brailledetection.server.BrailleAPI
 import com.ouh.brailledetection.server.RetrofitClient
 import kotlinx.coroutines.launch
 import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
-import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.ResponseBody
 import okio.BufferedSink
-import retrofit2.*
+import retrofit2.Call
+import retrofit2.Response
+import retrofit2.Retrofit
 
 class CameraViewModel(
 ) : ViewModel() {
@@ -35,6 +34,9 @@ class CameraViewModel(
     var retrofit: Retrofit = RetrofitClient.getInstance()
     var brailleAPI: BrailleAPI = retrofit.create(BrailleAPI::class.java)
 
+    private val _responseUrl = MutableLiveData<String>()
+    val responseUrl: LiveData<String> get() = _responseUrl
+
     init {
         _brailleData.value = "추론 결과 출력"
     }
@@ -43,15 +45,28 @@ class CameraViewModel(
         _brailleImage.value = bitmap
     }
 
-    fun setBrailleData(value: String) {
-        _brailleData.value = value
-    }
-
-
     // 서버에 있는 이미지 가져오기
-    private fun getImageFromServer() {
+    fun getImageFromServer(url: String) {
+        viewModelScope.launch {
+            brailleAPI.requestData(url)
+                .enqueue(object : retrofit2.Callback<ResponseBody> {
+                    override fun onResponse(
+                        call: Call<ResponseBody>,
+                        response: Response<ResponseBody>
+                    ) {
+                        if (response.isSuccessful) {
+                            val body = response.body()
+                            val bitmap = BitmapFactory.decodeStream(response.body()?.byteStream())
+                            _brailleImage.value = bitmap
+                            Log.d("++getImageFromServer", "$body")
+                        }
+                    }
 
-
+                    override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                        Log.d("++onFailure", t.message.toString())
+                    }
+                })
+        }
     }
 
     fun sendAddRequest() {
@@ -70,20 +85,10 @@ class CameraViewModel(
                         ) {
                             if (response.isSuccessful) {
                                 val body = response.body()
-                                val url = body?.brailleData?.get("url")
-                                val value = body?.brailleData?.get("response-value")
-
-                                Log.d("++sendAddRequest", "body: $body")
-                                Log.d("++sendAddRequest", "body.brailleData: ${body?.brailleData}")
-                                Log.d("++sendAddRequest", "body: ${body?.brailleData?.get("url")}")
-                                Log.d(
-                                    "++sendAddRequest",
-                                    "body: ${body?.brailleData?.get("response-value")}"
-                                )
-//                                _brailleData.value = body?.get("result")
-//                                Glide.with().load("").into(R.id.image)
-//                                _brailleImage.Log.d("sendAddRequest", "$response")
-                                Log.d("sendAddRequest", "${response.body()}")
+                                _responseUrl.value = "$fileName.jpeg"
+                                _brailleData.value =
+                                    body?.brailleData?.get("inferenced-chractors").toString()
+                                Log.d("++sendAddRequest", "${response.body()}")
                             }
                         }
 
@@ -97,27 +102,6 @@ class CameraViewModel(
                 e.printStackTrace()
             }
 
-        }
-    }
-
-    fun getResult() {
-        viewModelScope.launch {
-            brailleAPI.requestData().enqueue(object : retrofit2.Callback<String> {
-                override fun onResponse(call: Call<String>, response: Response<String>) {
-                    val body = response.body()
-                    if (body != null) {
-                        Log.d("결과", "$body")
-                        _brailleData.value = body.toString()
-                    } else {
-                        Log.d("++onResponse", "알 수 없는 오류 $response")
-                    }
-                }
-
-                override fun onFailure(call: Call<String>, t: Throwable) {
-                    Toast.makeText(MyApplication.instance, "연결 실패", Toast.LENGTH_SHORT).show()
-                    Log.d("++onFailure", t.toString())
-                }
-            })
         }
     }
 

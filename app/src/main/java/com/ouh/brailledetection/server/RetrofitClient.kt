@@ -10,11 +10,12 @@ import retrofit2.converter.scalars.ScalarsConverterFactory
 object RetrofitClient {
     private var instance: Retrofit? = null
     private val gson = GsonBuilder().setLenient().create()
+    private const val BASE_URL = "https://480c-35-221-25-113.ngrok.io/"
 
     fun getInstance(): Retrofit {
         if (instance == null) {
             instance = Retrofit.Builder()
-                .baseUrl("https://03c4-35-221-46-218.ngrok.io/")
+                .baseUrl(BASE_URL)
                 .client(createOkHttpClient())
                 .addConverterFactory(ScalarsConverterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create(gson))
@@ -23,8 +24,7 @@ object RetrofitClient {
         return instance!!
     }
 
-
-    fun createOkHttpClient(): OkHttpClient {
+    private fun createOkHttpClient(): OkHttpClient {
         val builder = OkHttpClient.Builder()
         val interceptor = HttpLoggingInterceptor()
         interceptor.setLevel(HttpLoggingInterceptor.Level.BODY)

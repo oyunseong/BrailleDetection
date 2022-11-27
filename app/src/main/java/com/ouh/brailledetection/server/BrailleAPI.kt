@@ -7,8 +7,10 @@ import retrofit2.Call
 import retrofit2.http.*
 
 interface BrailleAPI {
-    @GET("Desktop/imprintList.json")
-    fun requestData(): Call<String>
+    @GET("get-image")
+    fun requestData(
+        @Query("source") source: String
+    ): Call<ResponseBody>
 
     @Multipart
     @POST("uploader")
