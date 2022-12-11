@@ -122,7 +122,27 @@ class FirstFragment : Fragment() {
             when (requestCode) {
                 REQUEST_IMAGE_CAPTURE -> {
                     var bitmap: Bitmap = BitmapFactory.decodeFile(imageFilePath)
-                    bitmap = rotate(bitmap, 90)!!
+                    var exif: ExifInterface? = null
+
+                    try {
+                        exif = ExifInterface(imageFilePath)
+                    } catch (e: IOException) {
+                        e.printStackTrace()
+                    }
+
+                    var exifOrientation: Int = 0
+                    var exifDegree: Int = 0
+
+                    if (exif != null) {
+                        exifOrientation = exif.getAttributeInt(
+                            ExifInterface.TAG_ORIENTATION,
+                            ExifInterface.ORIENTATION_NORMAL
+                        )
+                        exifDegree = exifOrientationToDegrees(exifOrientation)
+                    } else {
+                        exifDegree = 0
+                    }
+                    bitmap = rotate(bitmap, exifDegree)
                     cameraViewModel.setImage(bitmap = bitmap)
                     try {
                         cameraViewModel.sendAddRequest()
